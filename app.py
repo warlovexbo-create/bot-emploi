@@ -4,7 +4,6 @@ Pipeline : Offres → Agences (lettre + CV + validation) → Envoi 9h → Suivi
 """
 import sys
 import os
-import sqlite3
 import threading
 import time
 import smtplib
@@ -18,10 +17,9 @@ from pathlib import Path
 sys.path.insert(0, ".")
 
 from flask import Flask, jsonify, request, send_from_directory
-from database import init_db, stats, get_conn
+from database import init_db, stats, get_conn, _fetch, _exec, USE_PG
 
 app = Flask(__name__, static_folder="ui")
-DB_PATH = "bot_emploi.db"
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
 CV_DIR = UPLOAD_DIR / "cv"
@@ -32,14 +30,14 @@ session_status = {"running": False, "step": "", "progress": 0}
 
 def query(sql, params=()):
     conn = get_conn()
-    rows = conn.execute(sql, params).fetchall()
+    rows = _fetch(conn, sql, params)
     conn.close()
-    return [dict(r) for r in rows]
+    return rows
 
 
 def execute(sql, params=()):
     conn = get_conn()
-    conn.execute(sql, params)
+    _exec(conn, sql, params)
     conn.commit()
     conn.close()
 
@@ -281,8 +279,8 @@ def api_set_email_config():
     conn = get_conn()
     for key in ["email_expediteur", "email_password", "email_smtp", "email_port"]:
         if key in data:
-            conn.execute(
-                "INSERT OR REPLACE INTO config_bot (cle, val) VALUES (?, ?)",
+            _exec(conn,
+                "INSERT INTO config_bot (cle, val) VALUES (?, ?) ON CONFLICT(cle) DO UPDATE SET val=EXCLUDED.val",
                 (key, data[key])
             )
     conn.commit()
@@ -300,7 +298,7 @@ def api_upload_cv_default():
         return jsonify({"ok": False, "error": "PDF uniquement"}), 400
     filepath = CV_DIR / "cv_default.pdf"
     f.save(str(filepath))
-    execute("INSERT OR REPLACE INTO config_bot (cle, val) VALUES ('cv_default', ?)", (str(filepath),))
+    execute("INSERT INTO config_bot (cle, val) VALUES (?, ?) ON CONFLICT(cle) DO UPDATE SET val=EXCLUDED.val", ("cv_default", str(filepath)))
     return jsonify({"ok": True, "path": str(filepath)})
 
 

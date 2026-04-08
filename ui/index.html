@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>JobBot — Lilian Chabrolle</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+:root{--bg:#0c0c0e;--bg2:#141417;--bg3:#1c1c21;--bg4:#25252b;--tx:#e8e6e0;--tx2:#9c9a92;--tx3:#6b695f;--gd:#c8a44e;--gd2:#a6862e;--gd-bg:rgba(200,164,78,.08);--gn:#3a9a5c;--gn-bg:rgba(58,154,92,.1);--rd:#c44b4b;--rd-bg:rgba(196,75,75,.1);--bl:#4a8ec9;--bl-bg:rgba(74,142,201,.08);--pp:#9b6dd7;--pp-bg:rgba(155,109,215,.1);--r:10px;--rs:6px}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh}
+.shell{max-width:1000px;margin:0 auto;padding:16px}
+header{display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid var(--bg3);margin-bottom:16px}
+header h1{font-size:17px;font-weight:700;color:var(--gd);letter-spacing:1px}
+header .sub{font-size:11px;color:var(--tx3);margin-top:2px}
+.hdr-actions{display:flex;gap:8px;align-items:center}
+#scan-btn{background:var(--gd);color:var(--bg);border:none;padding:9px 20px;border-radius:var(--r);font-weight:600;font-size:12px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:all .2s}
+#scan-btn:hover{background:var(--gd2)}#scan-btn:disabled{opacity:.4;cursor:not-allowed}
+.sp{display:none;width:13px;height:13px;border:2px solid var(--bg);border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite}
+#scan-btn.ld .sp{display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px}
+.stat{background:var(--bg2);border-radius:var(--rs);padding:10px 12px;text-align:center}
+.stat .n{font-size:20px;font-weight:700;color:var(--gd)}.stat .l{font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-top:1px}
+
+/* Tabs */
+.tabs{display:flex;border-bottom:1px solid var(--bg3);margin-bottom:14px}
+.tab{padding:9px 18px;font-size:13px;font-weight:500;color:var(--tx3);cursor:pointer;border:none;border-bottom:2px solid transparent;background:none;font-family:inherit;transition:all .2s;display:flex;align-items:center;gap:6px}
+.tab:hover{color:var(--tx2)}.tab.a{color:var(--gd);border-bottom-color:var(--gd)}
+.tab .b{font-size:10px;background:var(--bg4);color:var(--tx2);padding:1px 6px;border-radius:8px;font-weight:600}
+.tab.a .b{background:var(--gd-bg);color:var(--gd)}
+.tab .arrow{color:var(--tx3);font-size:16px;margin:0 -4px}
+.pnl{display:none}.pnl.a{display:block}
+
+/* Pipeline visual */
+.pipeline{display:flex;gap:4px;margin-bottom:16px;padding:12px;background:var(--bg2);border-radius:var(--r)}
+.pipe-step{flex:1;text-align:center;padding:6px 4px;border-radius:var(--rs);font-size:10px;font-weight:600;position:relative}
+.pipe-step .pipe-n{font-size:18px;font-weight:700;display:block;margin-bottom:2px}
+.pipe-step.s1{background:var(--gd-bg);color:var(--gd)}
+.pipe-step.s2{background:var(--bl-bg);color:var(--bl)}
+.pipe-step.s3{background:var(--pp-bg);color:var(--pp)}
+.pipe-step.s4{background:var(--gn-bg);color:var(--gn)}
+.pipe-step.s5{background:var(--rd-bg);color:var(--rd)}
+.pipe-arrow{color:var(--tx3);display:flex;align-items:center;font-size:14px}
+
+/* Cards */
+.card{background:var(--bg2);border:1px solid var(--bg3);border-radius:var(--r);padding:14px;margin-bottom:8px;transition:border-color .2s}
+.card:hover{border-color:var(--bg4)}
+.ch{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.ct{font-size:14px;font-weight:600;line-height:1.3}
+.cm{display:flex;gap:8px;margin-top:4px;flex-wrap:wrap}.cm span{font-size:11px;color:var(--tx3)}
+.cs{text-align:right;min-width:40px}.cs .p{font-size:18px;font-weight:700}.cs .p.h{color:var(--gn)}.cs .p.m{color:var(--gd)}.cs .p.lo{color:var(--tx3)}
+.cs .lb{font-size:9px;color:var(--tx3);text-transform:uppercase}
+.tags{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
+.tg{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500}
+.tg.src{background:var(--bg3);color:var(--tx2)}.tg.nw{background:var(--gd-bg);color:var(--gd)}.tg.dn{background:var(--gn-bg);color:var(--gn)}
+.tg.bl{background:var(--bl-bg);color:var(--bl)}.tg.pp{background:var(--pp-bg);color:var(--pp)}.tg.rd{background:var(--rd-bg);color:var(--rd)}
+.ca{display:flex;gap:6px;margin-top:10px;justify-content:flex-end;flex-wrap:wrap;align-items:center}
+.btn{border:none;padding:7px 14px;border-radius:var(--rs);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+.btn-g{background:var(--gd);color:var(--bg)}.btn-g:hover{background:var(--gd2)}
+.btn-gh{background:var(--bg3);color:var(--tx2)}.btn-gh:hover{background:var(--bg4);color:var(--tx)}
+.btn-r{background:var(--rd-bg);color:var(--rd)}.btn-r:hover{background:rgba(196,75,75,.2)}
+.btn-gn{background:var(--gn-bg);color:var(--gn)}.btn-gn:hover{background:rgba(58,154,92,.2)}
+.btn-b{background:var(--bl-bg);color:var(--bl)}.btn-b:hover{background:rgba(74,142,201,.15)}
+.btn-pp{background:var(--pp-bg);color:var(--pp)}.btn-pp:hover{background:rgba(155,109,215,.15)}
+
+/* Agence detail */
+.ag-type{font-size:11px;color:var(--gd);font-weight:500;margin-top:1px}
+.ag-info{font-size:11px;color:var(--tx3);margin-top:5px;line-height:1.5}
+.ag-info a{color:var(--bl);text-decoration:none}.ag-info a:hover{text-decoration:underline}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px}
+.dot-gd{background:var(--gd)}.dot-bl{background:var(--bl)}.dot-pp{background:var(--pp)}.dot-gn{background:var(--gn)}.dot-rd{background:var(--rd)}
+
+/* Status selector */
+.sel{background:var(--bg3);color:var(--tx2);border:1px solid var(--bg4);padding:5px 8px;border-radius:var(--rs);font-size:11px;font-family:inherit;cursor:pointer}
+
+/* Email inline edit */
+.email-edit{background:var(--bg);border:1px solid var(--bg3);color:var(--tx);padding:4px 8px;border-radius:var(--rs);font-size:11px;font-family:inherit;width:200px}
+
+/* File upload */
+.file-label{display:inline-flex;align-items:center;gap:4px;padding:7px 14px;border-radius:var(--rs);font-size:11px;font-weight:600;cursor:pointer;background:var(--bg3);color:var(--tx2);transition:all .15s}
+.file-label:hover{background:var(--bg4);color:var(--tx)}
+.file-label input{display:none}
+
+/* Progress bar mini */
+.prog{display:flex;gap:3px;margin-top:6px}
+.prog-step{height:4px;flex:1;border-radius:2px;background:var(--bg4)}
+.prog-step.filled{background:var(--gn)}
+.prog-step.current{background:var(--gd)}
+
+/* Section */
+.sh{margin:12px 0 8px}.sh .st{font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px}
+
+/* Modal */
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center}.mo.op{display:flex}
+.md{background:var(--bg2);border:1px solid var(--bg3);border-radius:var(--r);padding:20px;width:92%;max-width:640px;max-height:85vh;overflow-y:auto}
+.md h3{font-size:14px;color:var(--gd);margin-bottom:10px}
+.md textarea{width:100%;min-height:280px;background:var(--bg);border:1px solid var(--bg3);color:var(--tx);font-family:inherit;font-size:12px;padding:10px;border-radius:var(--rs);resize:vertical;line-height:1.6}
+.md .ca{margin-top:10px}
+
+/* Empty */
+.empty{text-align:center;padding:40px 20px;color:var(--tx3)}
+.empty p{font-size:13px;line-height:1.7;margin-top:6px}
+
+/* Notes */
+.notes-area{width:100%;background:var(--bg);border:1px solid var(--bg3);color:var(--tx);font-family:inherit;font-size:11px;padding:6px 8px;border-radius:var(--rs);resize:vertical;min-height:40px;margin-top:6px}
+
+@media(max-width:640px){.stats{grid-template-columns:repeat(3,1fr)}.shell{padding:10px}.tab{padding:7px 10px;font-size:12px}.pipeline{flex-wrap:wrap}.pipe-arrow{display:none}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<header>
+<div><h1>JOBBOT</h1><div class="sub">Lilian Chabrolle · BTS PI · ISTEF & EFAB Toulouse · Sept. 2026</div></div>
+<div class="hdr-actions">
+<label class="file-label">📎 CV<input type="file" accept=".pdf" onchange="uploadDefaultCV(this)"></label>
+<button id="scan-btn" onclick="scan()"><span class="sp"></span>Scanner</button>
+</div>
+</header>
+
+<div class="stats">
+<div class="stat"><div class="n" id="s1">—</div><div class="l">Offres</div></div>
+<div class="stat"><div class="n" id="s2">—</div><div class="l">Agences</div></div>
+<div class="stat"><div class="n" id="s3">—</div><div class="l">En attente</div></div>
+<div class="stat"><div class="n" id="s4">—</div><div class="l">Envoyées</div></div>
+<div class="stat"><div class="n" id="s5">—</div><div class="l">Entretiens</div></div>
+</div>
+
+<div class="tabs">
+<button class="tab a" data-t="offres">📡 Offres<span class="b" id="bn1">0</span></button>
+<span class="tab arrow">→</span>
+<button class="tab" data-t="agences">🏢 Agences<span class="b" id="bn2">0</span></button>
+<span class="tab arrow">→</span>
+<button class="tab" data-t="suivi">📊 Suivi<span class="b" id="bn3">0</span></button>
+</div>
+
+<div class="pnl a" id="p-offres"><div id="offres-list"></div></div>
+<div class="pnl" id="p-agences"><div id="agences-list"></div></div>
+<div class="pnl" id="p-suivi"><div id="suivi-pipe"></div><div id="suivi-list"></div></div>
+
+</div>
+
+<div class="mo" id="modal"><div class="md"><h3 id="mt">Lettre</h3><textarea id="mta"></textarea><div class="ca"><button class="btn btn-gh" onclick="closeM()">Fermer</button><button class="btn btn-g" id="msave" onclick="saveL()">Sauver</button><button class="btn btn-b" onclick="copyL()">Copier</button></div></div></div>
+
+<script>
+const ETAPES=['a-contacter','lettre-prete','validee','envoyee','relance','reponse','entretien'];
+const ETAPE_LABELS={'a-contacter':'À préparer','lettre-prete':'Lettre prête','validee':'Validée','envoyee':'Envoyée','relance':'Relancée','reponse':'Réponse','entretien':'Entretien'};
+const ETAPE_IDX=Object.fromEntries(ETAPES.map((e,i)=>[e,i]));
+let CM={};
+
+// Tabs
+document.querySelectorAll('.tab[data-t]').forEach(t=>t.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('a'));document.querySelectorAll('.pnl').forEach(x=>x.classList.remove('a'));t.classList.add('a');document.getElementById('p-'+t.dataset.t).classList.add('a')});
+
+const F=async(u,o)=>{try{const r=await fetch(u,o);return r.ok?await r.json():null}catch{return null}};
+const E=s=>!s?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+
+// ── STATS ──
+async function rS(){
+  const s=await F('/api/stats');if(!s)return;
+  document.getElementById('s1').textContent=s.total||0;
+  document.getElementById('s2').textContent=s.agences||0;
+  document.getElementById('s3').textContent=s.envois_en_attente||0;
+  document.getElementById('s4').textContent=s.agences_contactees||0;
+  document.getElementById('s5').textContent=s.agences_entretien||0;
+  const b=document.getElementById('scan-btn');
+  if(s.session?.running){b.disabled=true;b.classList.add('ld');b.innerHTML='<span class="sp"></span>Scan...'}
+  else{b.disabled=false;b.classList.remove('ld');b.innerHTML='<span class="sp"></span>Scanner'}
+}
+
+// ── OFFRES ──
+async function rO(){
+  const d=await F('/api/offres');if(!d)return;
+  const el=document.getElementById('offres-list');
+  const nw=d.filter(o=>o.statut==='trouvee');
+  document.getElementById('bn1').textContent=nw.length;
+  if(!d.length){el.innerHTML='<div class="empty"><p style="font-size:24px;opacity:.3">📡</p><p>Aucune offre. Clique <strong>Scanner</strong>.<br>Le bot scrape France Travail, Adzuna, Indeed, HelloWork<br>et ne garde que <strong>Toulouse</strong>.</p></div>';return}
+  let h='';
+  if(nw.length){h+=`<div class="sh"><span class="st">Nouvelles offres (${nw.length})</span></div>`;nw.forEach(o=>h+=oCard(o))}
+  const rest=d.filter(o=>o.statut!=='trouvee');
+  if(rest.length){h+=`<div class="sh"><span class="st">Transférées (${rest.length})</span></div>`;rest.forEach(o=>h+=oCard(o,1))}
+  el.innerHTML=h;
+}
+function oCard(o,done){
+  const sc=o.score>=80?'h':o.score>=50?'m':'lo';
+  const act=!done?`<button class="btn btn-g" onclick="transferer('${E(o.id)}')">→ Préparer candidature</button><button class="btn btn-r" onclick="delO('${E(o.id)}')">×</button>`:`<span class="tg dn">Dans le pipeline</span>`;
+  return`<div class="card"><div class="ch"><div><div class="ct">${E(o.titre)}</div><div class="cm"><span>🏢 ${E(o.entreprise||'?')}</span><span>📍 ${E(o.ville||'?')}</span></div></div><div class="cs"><div class="p ${sc}">${o.score}</div><div class="lb">pts</div></div></div><div class="tags"><span class="tg src">${E(o.source||'')}</span></div><div class="ca">${o.url?`<a href="${E(o.url)}" target="_blank" class="btn btn-gh">Voir offre</a>`:''}${act}</div></div>`;
+}
+async function transferer(id){await F('/api/offres/'+id+'/transferer',{method:'POST'});rO();rA();rS()}
+async function delO(id){await F('/api/offres/'+id,{method:'DELETE'});rO();rS()}
+
+// ── AGENCES ──
+async function rA(){
+  const d=await F('/api/agences');if(!d)return;
+  const el=document.getElementById('agences-list');
+  const prep=d.filter(a=>a.statut==='a-contacter'||a.statut==='lettre-prete');
+  const valid=d.filter(a=>a.statut==='validee');
+  document.getElementById('bn2').textContent=prep.length+valid.length;
+  if(!d.length){el.innerHTML='<div class="empty"><p style="font-size:24px;opacity:.3">🏢</p><p>Aucune agence.<br><strong>Scanner</strong> cherche les agences de Toulouse (INSEE).<br>Tu peux aussi transférer des offres ici.</p></div>';return}
+  let h='';
+  if(prep.length){h+=`<div class="sh"><span class="st">À préparer (${prep.length})</span></div>`;prep.forEach(a=>h+=aCard(a))}
+  if(valid.length){h+=`<div class="sh"><span class="st">Validées — envoi à 9h (${valid.length})</span></div>`;valid.forEach(a=>h+=aCard(a))}
+  el.innerHTML=h;
+}
+function aCard(a){
+  const s=a.statut;
+  let actions='';
+  if(s==='a-contacter'){
+    actions=`
+      <button class="btn btn-g" onclick="genL('${E(a.id)}')">Générer lettre</button>
+      <button class="btn btn-r" onclick="dA('${E(a.id)}')">×</button>`;
+  }else if(s==='lettre-prete'){
+    actions=`
+      <button class="btn btn-b" onclick="vLA('${E(a.id)}','${E(a.nom)}')">Voir/Modifier lettre</button>
+      <label class="file-label">📎 CV<input type="file" accept=".pdf" onchange="upCV('${E(a.id)}',this)"></label>
+      <input class="email-edit" placeholder="Email agence" value="${E(a.email||'')}" onblur="setEmail('${E(a.id)}',this.value)">
+      <button class="btn btn-gn" onclick="valA('${E(a.id)}')">✓ Valider pour envoi</button>`;
+  }else if(s==='validee'){
+    actions=`<span class="tg bl">⏰ Envoi programmé à 9h</span>
+      <button class="btn btn-pp" onclick="sendNow()">Envoyer maintenant</button>`;
+  }
+  return`<div class="card"><div class="ch"><div><div class="ct">${E(a.nom)}</div><div class="ag-type">${E(a.type||'')}</div><div class="ag-info">${a.contact?'👤 '+E(a.contact)+(a.poste?' · '+E(a.poste):'')+' ':' '}${a.adresse?'📍 '+E(a.adresse):''}</div></div></div><div class="ca">${actions}</div></div>`;
+}
+async function genL(id){await F('/api/agences/'+id+'/lettre',{method:'POST'});setTimeout(rA,2000)}
+async function upCV(id,input){if(!input.files[0])return;const fd=new FormData();fd.append('cv',input.files[0]);await F('/api/agences/'+id+'/cv',{method:'POST',body:fd});input.parentElement.innerHTML='📎 ✓'}
+async function setEmail(id,v){await F('/api/agences/'+id+'/email',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:v})})}
+async function valA(id){const r=await F('/api/agences/'+id+'/valider',{method:'POST'});if(r&&!r.ok)alert(r.error);rA();rS()}
+async function dA(id){await F('/api/agences/'+id,{method:'DELETE'});rA();rS()}
+async function sendNow(){await F('/api/envoyer-maintenant',{method:'POST'});setTimeout(()=>{rA();rSu();rS()},3000)}
+
+// ── SUIVI ──
+async function rSu(){
+  const d=await F('/api/suivi');if(!d)return;
+  const ps=await F('/api/suivi/stats');
+  document.getElementById('bn3').textContent=d.length;
+
+  // Pipeline visual
+  const pipe=document.getElementById('suivi-pipe');
+  if(ps){
+    pipe.innerHTML=`<div class="pipeline">
+      <div class="pipe-step s1"><span class="pipe-n">${ps['lettre-prete']||0}</span>Prête</div><div class="pipe-arrow">→</div>
+      <div class="pipe-step s2"><span class="pipe-n">${ps.validee||0}</span>Validée</div><div class="pipe-arrow">→</div>
+      <div class="pipe-step s3"><span class="pipe-n">${ps.envoyee||0}</span>Envoyée</div><div class="pipe-arrow">→</div>
+      <div class="pipe-step s3"><span class="pipe-n">${ps.relance||0}</span>Relancée</div><div class="pipe-arrow">→</div>
+      <div class="pipe-step s4"><span class="pipe-n">${ps.reponse||0}</span>Réponse</div><div class="pipe-arrow">→</div>
+      <div class="pipe-step s4"><span class="pipe-n">${ps.entretien||0}</span>Entretien</div>
+    </div>`
+  }
+
+  const el=document.getElementById('suivi-list');
+  if(!d.length){el.innerHTML='<div class="empty"><p>Le pipeline est vide.<br>Prépare des candidatures dans l\'onglet Agences.</p></div>';return}
+  el.innerHTML=d.map(a=>{
+    const idx=ETAPE_IDX[a.statut]||0;
+    const prog=ETAPES.slice(2).map((e,i)=>`<div class="prog-step ${ETAPE_IDX[a.statut]>i+2?'filled':ETAPE_IDX[a.statut]===i+2?'current':''}"></div>`).join('');
+    const dates=[a.date_envoi?`📤 ${a.date_envoi.slice(0,10)}`:'',a.date_relance?`🔄 ${a.date_relance.slice(0,10)}`:'',a.date_reponse?`💬 ${a.date_reponse.slice(0,10)}`:'',a.date_entretien?`🤝 ${a.date_entretien.slice(0,10)}`:''  ].filter(Boolean).join(' · ');
+    return`<div class="card"><div class="ch"><div><div class="ct">${E(a.nom)}</div><div class="cm"><span>${E(a.type||'')}</span><span>📍 ${E(a.adresse||'Toulouse')}</span>${dates?`<span>${dates}</span>`:''}</div><div class="prog">${prog}</div></div><div style="text-align:right"><select class="sel" onchange="chgSt('${E(a.id)}',this.value)">${ETAPES.slice(1).map(e=>`<option value="${e}" ${a.statut===e?'selected':''}>${ETAPE_LABELS[e]}</option>`).join('')}</select></div></div>${a.lettre?`<div class="ca"><button class="btn btn-b" onclick="vLA('${E(a.id)}','${E(a.nom)}')">Lettre</button></div>`:''}
+    <textarea class="notes-area" placeholder="Notes..." onblur="saveNotes('${E(a.id)}',this.value)">${E(a.notes||'')}</textarea></div>`;
+  }).join('');
+}
+async function chgSt(id,s){await F('/api/agences/'+id+'/statut',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({statut:s})});rSu();rS()}
+async function saveNotes(id,v){await F('/api/agences/'+id+'/notes',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({notes:v})})}
+
+// ── MODAL ──
+async function vLA(id,nom){CM={id};document.getElementById('mt').textContent='Lettre — '+nom;const a=await F('/api/agences');const x=(a||[]).find(z=>z.id===id);document.getElementById('mta').value=x?.lettre||'';document.getElementById('msave').style.display='';document.getElementById('modal').classList.add('op')}
+async function saveL(){if(CM.id){await F('/api/agences/'+CM.id+'/lettre',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({lettre:document.getElementById('mta').value})})}closeM();rA();rSu()}
+function copyL(){const t=document.getElementById('mta');t.select();navigator.clipboard.writeText(t.value)}
+function closeM(){document.getElementById('modal').classList.remove('op')}
+
+// ── CV DEFAULT ──
+async function uploadDefaultCV(input){if(!input.files[0])return;const fd=new FormData();fd.append('cv',input.files[0]);const r=await F('/api/config/cv-default',{method:'POST',body:fd});if(r?.ok)input.parentElement.innerHTML='📎 CV ✓'}
+
+// ── SCAN ──
+async function scan(){const b=document.getElementById('scan-btn');b.disabled=true;b.classList.add('ld');b.innerHTML='<span class="sp"></span>Scan...';await F('/api/lancer',{method:'POST'});const p=setInterval(async()=>{await Promise.all([rS(),rO(),rA(),rSu()]);const s=await F('/api/stats');if(!s?.session?.running){clearInterval(p);b.disabled=false;b.classList.remove('ld');b.innerHTML='<span class="sp"></span>Scanner'}},3000)}
+
+// ── INIT ──
+rS();rO();rA();rSu();setInterval(rS,10000);
+</script>
+</body>
+</html>
